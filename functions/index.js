@@ -1,28 +1,33 @@
-const { setGlobalOptions } = require("firebase-functions");
-const { onRequest } = require("firebase-functions/https");
-const functions = require("firebase-functions");
+// ✅ Firebase v2 API
+const { setGlobalOptions } = require("firebase-functions/v2");
+const { onRequest } = require("firebase-functions/v2/https");
+const { defineSecret } = require("firebase-functions/params");
+
 const mercadopago = require("mercadopago");
 const cors = require("cors");
 
-if (process.env.FUNCTIONS_EMULATOR === 'true') {
-  require("dotenv").config(); // Solo se usa localmente
-}
+// 🔒 Secret definido desde Firebase CLI
+const MP_ACCESS_TOKEN = defineSecret("MP_ACCESS_TOKEN");
 
+// 🔧 Opcional: limitar instancias por costo
 setGlobalOptions({ maxInstances: 10 });
 
-mercadopago.configure({
-  access_token: functions.config().mercadopago.token
-});
-
+// 🌐 Middleware CORS
 const corsHandler = cors({ origin: true });
 
-exports.createPreference = functions.https.onRequest((req, res) => {
+// 🚀 Función HTTPS para crear la preferencia de pago
+exports.createPreference = onRequest({ secrets: [MP_ACCESS_TOKEN] }, (req, res) => {
   corsHandler(req, res, async () => {
     if (req.method !== "POST") {
       return res.status(405).send("Método no permitido");
     }
 
     try {
+      // ⚙️ Configurar MP con token secreto
+      mercadopago.configure({
+        access_token: functions.config().mercadopago.token,
+      });
+
       const { items } = req.body;
 
       const preference = {
@@ -43,7 +48,7 @@ exports.createPreference = functions.https.onRequest((req, res) => {
       const response = await mercadopago.preferences.create(preference);
       res.status(200).json({ preferenceId: response.body.id });
     } catch (error) {
-      console.error('Error al crear preferencia:', error);
+      console.error("❌ Error al crear preferencia:", error);
       res.status(500).json({ error: "Error al crear la preferencia" });
     }
   });
