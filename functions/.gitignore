@@ -1,0 +1,17 @@
+# Logs
+*.log
+firebase-debug.log
+
+# Node dependencies
+node_modules/
+
+# dotenv environment variables
+.env
+.env.*
+
+# Firebase local data
+.firebase/
+
+# Others
+*.local
+.dataconnect
