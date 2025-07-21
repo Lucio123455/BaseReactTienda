@@ -25,9 +25,8 @@ exports.createPreference = onRequest({ secrets: [MP_ACCESS_TOKEN] }, (req, res) 
     try {
       // ⚙️ Configurar MP con token secreto
       mercadopago.configure({
-        access_token: functions.config().mercadopago.token,
+        access_token: process.env.MP_ACCESS_TOKEN,
       });
-
       const { items } = req.body;
 
       const preference = {
